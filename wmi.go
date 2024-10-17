@@ -39,6 +39,7 @@ import (
 
 	"github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
+	"github.com/scjalliance/comshim"
 )
 
 var l = log.New(os.Stdout, "", log.LstdFlags)
@@ -140,7 +141,6 @@ func (c *Client) coinitService(connectServerArgs ...interface{}) (*ole.IDispatch
 		if unknown != nil {
 			unknown.Release()
 		}
-		ole.CoUninitialize()
 	}
 
 	// if we error'ed here, clean up immediately
@@ -151,13 +151,14 @@ func (c *Client) coinitService(connectServerArgs ...interface{}) (*ole.IDispatch
 		}
 	}()
 
-	err = ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
+	err = comshim.TryAdd(1)
 	if err != nil {
 		oleCode := err.(*ole.OleError).Code()
 		if oleCode != ole.S_OK && oleCode != S_FALSE {
 			return nil, nil, err
 		}
 	}
+	defer comshim.Done()
 
 	unknown, err = oleutil.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
@@ -467,7 +468,7 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 					Reason:     "not a Float64",
 				}
 			}
-		
+
 		default:
 			if f.Kind() == reflect.Slice {
 				switch f.Type().Elem().Kind() {
