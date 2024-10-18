@@ -16,7 +16,6 @@ import (
 
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
-	"github.com/scjalliance/comshim"
 )
 
 func TestQuery(t *testing.T) {
@@ -284,14 +283,14 @@ func getRSS(url string, xmlhttp *ole.IDispatch, MinimalTest bool) (int, error) {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := comshim.TryAdd(1)
+		err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
 		if err != nil {
 			oleCode := err.(*ole.OleError).Code()
 			if oleCode != ole.S_OK && oleCode != S_FALSE {
 				return 0, err
 			}
 		}
-		defer comshim.Done()
+		defer ole.CoUninitialize()
 
 		//fmt.Println("CreateObject Microsoft.XMLHTTP")
 		unknown, err := oleutil.CreateObject("Microsoft.XMLHTTP")
@@ -395,14 +394,14 @@ func _TestMemoryOLE(t *testing.T) {
 		runtime.LockOSThread()
 		defer runtime.UnlockOSThread()
 
-		err := comshim.TryAdd(1)
+		err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
 		if err != nil {
 			oleCode := err.(*ole.OleError).Code()
 			if oleCode != ole.S_OK && oleCode != S_FALSE {
 				t.Fatal(err)
 			}
 		}
-		defer comshim.Done()
+		defer ole.CoUninitialize()
 
 		//fmt.Println("CreateObject Microsoft.XMLHTTP")
 		unknown, err = oleutil.CreateObject("Microsoft.XMLHTTP")

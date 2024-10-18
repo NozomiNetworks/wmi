@@ -145,20 +145,24 @@ func (c *Client) coinitService(connectServerArgs ...interface{}) (*ole.IDispatch
 
 	// if we error'ed here, clean up immediately
 	var err error
+	var errCoinit error
 	defer func() {
+		if errCoinit != nil {
+			defer comshim.Done()
+		}
 		if err != nil {
 			deferFn()
 		}
 	}()
 
-	err = comshim.TryAdd(1)
+	errCoinit = comshim.TryAdd(1)
+	err = errCoinit
 	if err != nil {
 		oleCode := err.(*ole.OleError).Code()
 		if oleCode != ole.S_OK && oleCode != S_FALSE {
 			return nil, nil, err
 		}
 	}
-	defer comshim.Done()
 
 	unknown, err = oleutil.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
