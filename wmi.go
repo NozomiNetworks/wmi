@@ -141,22 +141,18 @@ func (c *Client) coinitService(connectServerArgs ...interface{}) (*ole.IDispatch
 		if unknown != nil {
 			unknown.Release()
 		}
+		comshim.Done()
 	}
 
 	// if we error'ed here, clean up immediately
 	var err error
-	var errCoinit error
 	defer func() {
-		if errCoinit != nil {
-			defer comshim.Done()
-		}
 		if err != nil {
 			deferFn()
 		}
 	}()
 
-	errCoinit = comshim.TryAdd(1)
-	err = errCoinit
+	err = comshim.TryAdd(1)
 	if err != nil {
 		oleCode := err.(*ole.OleError).Code()
 		if oleCode != ole.S_OK && oleCode != S_FALSE {
